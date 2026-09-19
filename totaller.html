@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tally</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14150f;
+    --panel: #1c1e14;
+    --panel-alt: #22241a;
+    --border: #3a3d2b;
+    --border-soft: #2a2c1f;
+    --text: #eae6d5;
+    --text-dim: #9a9d84;
+    --text-faint: #676a56;
+    --accent: #a3c02f;
+    --accent-dim: #7a9124;
+    --warn: #d9954a;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  :root[data-theme="light"]{
+    --bg: #f4f2e8;
+    --panel: #ffffff;
+    --panel-alt: #ecead9;
+    --border: #c9c6ac;
+    --border-soft: #d9d6c0;
+    --text: #23241a;
+    --text-dim: #5b5d47;
+    --text-faint: #8a8c70;
+    --accent: #5c7a15;
+    --accent-dim: #46600f;
+    --warn: #a2621c;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg: #f4f2e8;
+      --panel: #ffffff;
+      --panel-alt: #ecead9;
+      --border: #c9c6ac;
+      --border-soft: #d9d6c0;
+      --text: #23241a;
+      --text-dim: #5b5d47;
+      --text-faint: #8a8c70;
+      --accent: #5c7a15;
+      --accent-dim: #46600f;
+      --warn: #a2621c;
+      color-scheme: light;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 32px 16px 64px;
+  }
+  .wrap{
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  header{
+    margin-bottom: 28px;
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  h1{
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  h1 .dim{ color: var(--text-dim); font-weight: 500; }
+  .theme-toggle{
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .theme-toggle:hover{ color: var(--text); border-color: var(--text-dim); }
+
+  section{
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .section-label{
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 0 0 10px;
+  }
+  textarea{
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    padding: 10px;
+  }
+  textarea:focus, input:focus, button:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .row-actions{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .hint{
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .hint.warn{ color: var(--warn); }
+
+  button.primary{
+    background: var(--accent);
+    color: #14150f;
+    border: none;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  button.primary:hover{ background: var(--accent-dim); }
+  button.primary:disabled{
+    background: var(--border);
+    color: var(--text-faint);
+    cursor: not-allowed;
+  }
+  button.ghost{
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  button.ghost:hover{ color: var(--text); border-color: var(--text-dim); }
+
+  .slots{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .slot{
+    display:grid;
+    grid-template-columns: 20px 1fr 120px;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel-alt);
+    border: 1px solid var(--border-soft);
+    border-radius: 2px;
+    padding: 6px 8px;
+  }
+  .slot .idx{
+    color: var(--text-faint);
+    font-size: 12px;
+    text-align: right;
+  }
+  .slot input{
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 4px 2px;
+    width: 100%;
+    border-bottom: 1px solid transparent;
+  }
+  .slot input.lbl{ color: var(--text-dim); }
+  .slot input.val{
+    text-align: right;
+    font-weight: 600;
+  }
+  .slot input:focus{
+    border-bottom: 1px solid var(--accent);
+    outline: none;
+  }
+  .slot.filled{ border-color: var(--border); }
+
+  .ledger{
+    font-size: 14px;
+    white-space: pre;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 0;
+  }
+  .ledger .total-line{ color: var(--accent); font-weight: 700; }
+  .empty-ledger{
+    color: var(--text-faint);
+    font-size: 13px;
+    padding: 6px 2px;
+  }
+  .output-actions{
+    display:flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Tally <span class="dim">/ 7-way totaller</span></h1>
+      <button class="theme-toggle" id="themeToggle" type="button">dark/light</button>
+    </header>
+
+    <section>
+      <p class="section-label">Paste the dump. Any line reading "TOTAL: x" gets pulled out, in order, up to 7.</p>
+      <textarea id="dump" placeholder="paste the raw report here..."></textarea>
+      <div class="row-actions">
+        <span class="hint" id="parseHint">nothing extracted yet</span>
+        <button class="primary" id="extractBtn" type="button">Extract totals</button>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label">The 7 bet types. Extracted values land here — rename or correct anything by hand.</p>
+      <div class="slots" id="slots"></div>
+      <div class="row-actions">
+        <span class="hint" id="slotHint">0 of 7 filled</span>
+        <div style="display:flex; gap:8px;">
+          <button class="ghost" id="clearBtn" type="button">Clear</button>
+          <button class="primary" id="addBtn" type="button" disabled>Add it up</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label">Result</p>
+      <div id="ledgerBox"><p class="empty-ledger">— fill all 7 boxes, then hit "Add it up" —</p></div>
+      <div class="output-actions" id="outputActions" style="display:none;">
+        <button class="ghost" id="copyBtn" type="button">Copy</button>
+      </div>
+    </section>
+  </div>
+
+<script>
+(function(){
+  const SLOT_COUNT = 7;
+  const slotsEl = document.getElementById('slots');
+  const dumpEl = document.getElementById('dump');
+  const parseHint = document.getElementById('parseHint');
+  const slotHint = document.getElementById('slotHint');
+  const extractBtn = document.getElementById('extractBtn');
+  const addBtn = document.getElementById('addBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const ledgerBox = document.getElementById('ledgerBox');
+  const outputActions = document.getElementById('outputActions');
+  const copyBtn = document.getElementById('copyBtn');
+  const themeToggle = document.getElementById('themeToggle');
+
+  let lastOutputText = '';
+
+  // build 7 slots
+  const rows = [];
+  for (let i = 0; i < SLOT_COUNT; i++){
+    const row = document.createElement('div');
+    row.className = 'slot';
+    row.innerHTML = `
+      <span class="idx">${i+1}</span>
+      <input class="lbl" type="text" placeholder="bet type ${i+1}" />
+      <input class="val" type="text" inputmode="numeric" placeholder="value" />
+    `;
+    slotsEl.appendChild(row);
+    const lblInput = row.querySelector('.lbl');
+    const valInput = row.querySelector('.val');
+    lblInput.addEventListener('input', refresh);
+    valInput.addEventListener('input', refresh);
+    rows.push({ row, lblInput, valInput });
+  }
+
+  function parseDump(text){
+    const lines = text.split(/\r?\n/);
+    let currentLabel = null;
+    let sectionCount = 0;
+    const found = [];
+    for (const line of lines){
+      const headerMatch = line.match(/^\s*===+\s*(.+?)\s*===+\s*$/);
+      if (headerMatch){
+        currentLabel = headerMatch[1].trim();
+        continue;
+      }
+      const totalMatch = line.match(/^\s*TOTAL:\s*([\d,]+)\s*$/i);
+      if (totalMatch){
+        sectionCount++;
+        found.push({
+          label: currentLabel || `unlabeled ${sectionCount}`,
+          value: totalMatch[1].replace(/,/g, '')
+        });
+        if (found.length === SLOT_COUNT) break;
+      }
+    }
+    return found;
+  }
+
+  extractBtn.addEventListener('click', () => {
+    const text = dumpEl.value;
+    const found = parseDump(text);
+    if (found.length === 0){
+      parseHint.textContent = 'no "TOTAL: x" lines found';
+      parseHint.className = 'hint warn';
+      return;
+    }
+    found.forEach((f, i) => {
+      rows[i].lblInput.value = f.label;
+      rows[i].valInput.value = f.value;
+    });
+    if (found.length < SLOT_COUNT){
+      parseHint.textContent = `only ${found.length} of 7 found — fill the rest by hand`;
+      parseHint.className = 'hint warn';
+    } else {
+      parseHint.textContent = `7 of 7 extracted`;
+      parseHint.className = 'hint';
+    }
+    refresh();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    dumpEl.value = '';
+    rows.forEach(r => { r.lblInput.value = ''; r.valInput.value = ''; });
+    parseHint.textContent = 'nothing extracted yet';
+    parseHint.className = 'hint';
+    ledgerBox.innerHTML = '<p class="empty-ledger">— fill all 7 boxes, then hit "Add it up" —</p>';
+    outputActions.style.display = 'none';
+    refresh();
+  });
+
+  function getValues(){
+    return rows.map(r => {
+      const raw = r.valInput.value.replace(/,/g, '').trim();
+      if (raw === '' || !/^\d+$/.test(raw)) return null;
+      return parseInt(raw, 10);
+    });
+  }
+
+  function refresh(){
+    const values = getValues();
+    const filledCount = values.filter(v => v !== null).length;
+    slotHint.textContent = `${filledCount} of 7 filled`;
+    slotHint.className = filledCount === SLOT_COUNT ? 'hint' : 'hint warn';
+    rows.forEach((r, i) => {
+      r.row.classList.toggle('filled', values[i] !== null);
+    });
+    addBtn.disabled = filledCount !== SLOT_COUNT;
+  }
+
+  addBtn.addEventListener('click', () => {
+    const values = getValues();
+    if (values.some(v => v === null)) return;
+
+    const strs = values.map(v => v.toLocaleString('en-US'));
+    const width = Math.max(...strs.map(s => s.length));
+    const lines = [];
+    strs.forEach((s, i) => {
+      const padded = s.padStart(width, ' ');
+      lines.push((i === 0 ? '    ' : '+ ') + padded);
+    });
+    const sepLen = 4 + width;
+    lines.push('='.repeat(sepLen));
+
+    const grandTotal = values.reduce((a, b) => a + b, 0);
+    const grandStr = grandTotal.toLocaleString('en-US');
+
+    const bodyText = lines.join('\n');
+    const fullText = bodyText + '\nGRAND TOTAL:\n' + grandStr;
+    lastOutputText = fullText;
+
+    ledgerBox.innerHTML =
+      '<pre class="ledger">' +
+      escapeHtml(bodyText) +
+      '\nGRAND TOTAL:\n<span class="total-line">' + escapeHtml(grandStr) + '</span></pre>';
+    outputActions.style.display = 'flex';
+  });
+
+  function escapeHtml(str){
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  copyBtn.addEventListener('click', async () => {
+    if (!lastOutputText) return;
+    try {
+      await navigator.clipboard.writeText(lastOutputText);
+      copyBtn.textContent = 'copied';
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1200);
+    } catch (e) {
+      copyBtn.textContent = 'copy failed';
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1200);
+    }
+  });
+
+  themeToggle.addEventListener('click', () => {
+    const root = document.documentElement;
+    const current = root.getAttribute('data-theme');
+    if (current === 'dark') root.setAttribute('data-theme', 'light');
+    else if (current === 'light') root.setAttribute('data-theme', 'dark');
+    else root.setAttribute('data-theme', 'light');
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
